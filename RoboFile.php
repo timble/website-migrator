@@ -1,7 +1,7 @@
 <?php
 class RoboFile extends \Robo\Tasks
 {
-    function migrate($project_name, $host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'))
+    public function migrate($project_name, $host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'))
     {
         if (empty($target)) {
             $target = realpath(__DIR__) . '/' . $project_name;
@@ -32,7 +32,7 @@ class RoboFile extends \Robo\Tasks
         $create->run();
 
         // Copy the files locally (exclude configuration.php/cache/tmp/logs)
-        /*$this->taskRsync()
+        $this->taskRsync()
             ->fromUser($user)
             ->fromHost($host)
             ->fromPath($remote_path)
@@ -95,19 +95,48 @@ class RoboFile extends \Robo\Tasks
             ->add('-A')
             ->commit('Initial commit')
             ->push('origin', 'master')
-            ->run();*/
+            ->run();
 
         // Fetch database
+        $tmp = tempnam('/tmp/', $project_name.'-');
         $this->taskRsync()
             ->fromUser($user)
             ->fromHost($host)
-            ->fromPath($remote_path)
-            ->toPath('/tmp/')
+            ->fromPath($remote_path.'/configuration.php')
+            ->toPath($tmp)
             ->remoteShell("ssh -p $ssh_port")
-            ->include('configuration.php')
-            ->exclude('*')
-            //->verbose()
-            //->dryRun()
+            ->run();
+
+        require $tmp;
+
+        $config = new JConfig();
+
+        unlink($tmp);
+
+        $mysqldump = $this->taskExec('mysqldump')
+                        ->arg('-h' . $config->host)
+                        ->arg('-u' . escapeshellarg($config->user))
+                        ->arg('-p' . escapeshellarg($config->password))
+                        ->arg($config->db . ' > ' . $project_name . '.sql');
+
+        $this->taskSshExec($host, $user)
+            ->port($ssh_port)
+            ->remoteDir($remote_path)
+            ->exec($mysqldump)
+            ->run();
+
+        $this->taskRsync()
+            ->fromUser($user)
+            ->fromHost($host)
+            ->fromPath($remote_path.'/' . $project_name . '.sql')
+            ->toPath($target)
+            ->remoteShell("ssh -p $ssh_port")
+            ->run();
+
+        $this->taskSshExec($host, $user)
+            ->port($ssh_port)
+            ->remoteDir($remote_path)
+            ->exec('rm -f ' . $project_name . '.sql')
             ->run();
 
         // Init Capistrano
