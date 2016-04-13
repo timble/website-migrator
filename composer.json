@@ -1,0 +1,5 @@
+{
+	"require-dev": {
+	    "codegyre/robo": "*"
+	}
+}
