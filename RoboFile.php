@@ -164,9 +164,11 @@ class RoboFile extends \Robo\Tasks
             ->copy(__DIR__.'/files/capistrano/production.rb', $repository.'/config/deploy/production.rb')
             ->run();
 
+        $linked_dirs = array_unique(array_merge($writables, array('tmp', 'logs', 'cache', 'administrator/cache')));
+
         $this->taskReplaceInFile($repository.'/config/deploy.rb')
             ->from(array('{{application}}', '{{repository}}', '{{linked_dirs}}', '{{linked_files}}'))
-            ->to(array($project_name, $git_repo, implode(' ', $writables), 'configuration.php'))
+            ->to(array($project_name, $git_repo, implode(' ', $linked_dirs), 'configuration.php'))
             ->run();
 
         $this->taskReplaceInFile($repository.'/config/deploy/production.rb')
