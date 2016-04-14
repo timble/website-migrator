@@ -180,6 +180,11 @@ class RoboFile extends \Robo\Tasks
             ->commit('Setup Capistrano')
             ->run();
 
+        $this->taskWriteToFile($repository.'/.gitignore')
+                        ->append()
+                        ->line('/.capistrano')
+                        ->run();
+
         $this->say('Done!');
     }
 }
