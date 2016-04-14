@@ -45,7 +45,7 @@ class RoboFile extends \Robo\Tasks
             ->remoteShell("ssh -p $ssh_port")
             ->recursive()
             ->excludeVcs()
-            ->exclude(array('configuration.php', 'cache/', 'logs/', 'tmp/', 'administrator/cache/'))
+            ->exclude(array('/configuration.php', '/cache', '/logs', '/tmp', '/administrator/cache/'))
             ->checksum()
             ->wholeFile()
             ->progress()
