@@ -64,7 +64,8 @@ class RoboFile extends \Robo\Tasks
             $ignores->line('/cache')
                     ->line('/administrator/cache')
                     ->line('/tmp')
-                    ->line('/logs');
+                    ->line('/logs')
+                    ->line('/configuration.php');
         }
         else $ignores->append();
 
