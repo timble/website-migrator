@@ -3,6 +3,8 @@ class RoboFile extends \Robo\Tasks
 {
     public function migrate($project_name, $host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'))
     {
+        $project_name = preg_replace('/[^a-zA-Z0-9\.\-\_]+/', '', $project_name);
+
         if (empty($target)) {
             $target = realpath(__DIR__) . '/' . $project_name;
         }
@@ -13,12 +15,15 @@ class RoboFile extends \Robo\Tasks
            $remote_path .= '/';
         }
 
-        if (!file_exists($target)) {
-            throw new Exception('Target directory ' . $target . ' does not exist');
+        if (!file_exists($target))
+        {
+            $this->taskFileSystemStack()
+                    ->mkdir($target)
+                    ->run();
         }
 
         $repository = $target . '/repository';
-        $files      = $target . '/files';
+        $files      = $target . '/shared';
 
         $create = $this->taskFileSystemStack();
 
@@ -94,7 +99,6 @@ class RoboFile extends \Robo\Tasks
             ->exec('remote add origin ' . $git_repo)
             ->add('-A')
             ->commit('Initial commit')
-            ->push('origin', 'master')
             ->run();
 
         // Fetch database
@@ -140,5 +144,42 @@ class RoboFile extends \Robo\Tasks
             ->run();
 
         // Init Capistrano
+        $this->taskWriteToFile($repository.'/Gemfile')
+            ->line('source \'https://rubygems.org\'')
+            ->line('')
+            ->line('gem \'capistrano\', \'~> 3.3.0\', require: false, group: :development')
+            ->run();
+
+        $git_repo = 'git@github.com:timble/' . $project_name . '.git';
+        $this->taskExec('bundle')
+                ->arg('install')
+                ->dir($repository)
+                ->run();
+
+        $this->taskFileSystemStack()
+            ->mkdir($repository.'/config')
+            ->mkdir($repository.'/config/deploy')
+            ->copy(__DIR__.'/files/capistrano/deploy.rb', $repository.'/config/deploy.rb')
+            ->copy(__DIR__.'/files/capistrano/Capfile', $repository.'/Capfile')
+            ->copy(__DIR__.'/files/capistrano/production.rb', $repository.'/config/deploy/production.rb')
+            ->run();
+
+        $this->taskReplaceInFile($repository.'/config/deploy.rb')
+            ->from(array('{{application}}', '{{repository}}', '{{linked_dirs}}', '{{linked_files}}'))
+            ->to(array($project_name, $git_repo, implode(' ', $writables), 'configuration.php'))
+            ->run();
+
+        $this->taskReplaceInFile($repository.'/config/deploy/production.rb')
+            ->from(array('{{server}}', '{{user}}', '{{port}}'))
+            ->to(array('185.2.52.76', 'deploy', '22'))
+            ->run();
+
+        $this->taskGitStack()
+            ->dir($repository)
+            ->add('-A')
+            ->commit('Setup Capistrano')
+            ->run();
+
+        $this->say('Done!');
     }
 }
