@@ -36,4 +36,3 @@ the `/Users/johndoe/Sites/www.site.com` directory will contain following files:
 * `repository` : the Git repository ready to be pushed to origin.
 * `shared` : The writable directories. In our example, this directory will now contain `images` and `joomlatools-files` subdirectories.
 * `www.site.com.sql` : the SQL dump of the original site
-

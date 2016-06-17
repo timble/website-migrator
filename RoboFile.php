@@ -172,7 +172,7 @@ class RoboFile extends \Robo\Tasks
 
         $this->taskReplaceInFile($repository.'/config/deploy/production.rb')
             ->from(array('{{server}}', '{{user}}', '{{port}}'))
-            ->to(array( , 'deploy', '22'))
+            ->to(array('127.0.0.1', 'deploy', '22'))
             ->run();
 
         $this->taskWriteToFile($repository.'/.gitignore')
