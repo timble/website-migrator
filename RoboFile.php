@@ -104,6 +104,7 @@ class RoboFile extends \Robo\Tasks
         $this->taskRsync()
             ->fromUser($user)
             ->fromHost($host)
+            ->option('copy-links')
             ->fromPath($remote_path.'/configuration.php')
             ->toPath($tmp)
             ->remoteShell("ssh -p $ssh_port")
@@ -132,6 +133,7 @@ class RoboFile extends \Robo\Tasks
             ->fromHost($host)
             ->fromPath($remote_path.'/' . $project_name . '.sql')
             ->toPath($target)
+            ->option('copy-links')
             ->remoteShell("ssh -p $ssh_port")
             ->run();
 
