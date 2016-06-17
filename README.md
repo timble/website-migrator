@@ -25,8 +25,6 @@ The command needs the following arguments:
 vendor/bin/robo migrate <project name> <ssh host> <ssh user> <remote path to documentroot> <local target directory> <ssh port> <list of writable directories>
 ```
 
-During execution it will prompt you for more details (Git e-mail and repository).
-
 Example, if you run the following command: 
 
 ```

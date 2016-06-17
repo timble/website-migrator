@@ -43,6 +43,7 @@ class RoboFile extends \Robo\Tasks
             ->fromPath($remote_path)
             ->toPath($repository)
             ->remoteShell("ssh -p $ssh_port")
+            ->option('copy-links')
             ->recursive()
             ->excludeVcs()
             ->exclude(array('/configuration.php', '/cache', '/logs', '/tmp', '/administrator/cache/'))
@@ -90,14 +91,10 @@ class RoboFile extends \Robo\Tasks
         $ignores->run();
 
         // Init git repo and commit the files
-        $git_email = $this->askDefault('Git author e-mail', get_current_user() . '@timble.net');
-        $git_repo  = $this->askDefault('Git repository', 'git@github.com:timble/' . $project_name . '.git');
-
         $this->taskGitStack()
             ->dir($repository)
             ->exec('init')
-            ->exec('config user.email ' . $git_email)
-            ->exec('remote add origin ' . $git_repo)
+            ->exec('remote add origin git@github.com:cta-int/' . $project_name . '.git')
             ->add('-A')
             ->commit('Initial commit')
             ->run();
@@ -157,12 +154,13 @@ class RoboFile extends \Robo\Tasks
                 ->dir($repository)
                 ->run();
 
-        $this->taskFileSystemStack()
+        $this->taskFileSystemS tack()
             ->mkdir($repository.'/config')
             ->mkdir($repository.'/config/deploy')
             ->copy(__DIR__.'/files/capistrano/deploy.rb', $repository.'/config/deploy.rb')
             ->copy(__DIR__.'/files/capistrano/Capfile', $repository.'/Capfile')
             ->copy(__DIR__.'/files/capistrano/production.rb', $repository.'/config/deploy/production.rb')
+            ->copy(__DIR__.'/files/capistrano/README.md', $repository.'/README.md')
             ->run();
 
         $linked_dirs = array_unique(array_merge($writables, array('tmp', 'logs', 'cache', 'administrator/cache')));
@@ -174,7 +172,12 @@ class RoboFile extends \Robo\Tasks
 
         $this->taskReplaceInFile($repository.'/config/deploy/production.rb')
             ->from(array('{{server}}', '{{user}}', '{{port}}'))
-            ->to(array('185.2.52.76', 'deploy', '22'))
+            ->to(array( , 'deploy', '22'))
+            ->run();
+
+        $this->taskWriteToFile($repository.'/.gitignore')
+            ->append()
+            ->line('/.capistrano')
             ->run();
 
         $this->taskGitStack()
@@ -182,11 +185,6 @@ class RoboFile extends \Robo\Tasks
             ->add('-A')
             ->commit('Setup Capistrano')
             ->run();
-
-        $this->taskWriteToFile($repository.'/.gitignore')
-                        ->append()
-                        ->line('/.capistrano')
-                        ->run();
 
         $this->say('Done!');
     }
