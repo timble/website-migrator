@@ -154,7 +154,7 @@ class RoboFile extends \Robo\Tasks
                 ->dir($repository)
                 ->run();
 
-        $this->taskFileSystemS tack()
+        $this->taskFileSystemStack()
             ->mkdir($repository.'/config')
             ->mkdir($repository.'/config/deploy')
             ->copy(__DIR__.'/files/capistrano/deploy.rb', $repository.'/config/deploy.rb')
