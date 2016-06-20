@@ -40,7 +40,6 @@ class RoboFile extends \Robo\Tasks
         $this->rsync($host, $user, $remote_path, $target, $ssh_port, $writables);
 
         // Set aside the writable directories (images, ..) and add to .gitignore
-        $moves   = $this->taskFileSystemStack();
         $ignores = $this->taskWriteToFile($repository.'/.gitignore');
 
         if (!file_exists($repository.'/.gitignore'))
@@ -66,11 +65,8 @@ class RoboFile extends \Robo\Tasks
 
                 continue;
             }
-
-            $moves->rename($from, $to);
         }
 
-        $moves->run();
         $ignores->run();
 
         // Init git repo and commit the files
