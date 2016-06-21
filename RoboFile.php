@@ -37,7 +37,7 @@ class RoboFile extends \Robo\Tasks
         $create->run();
 
         // Copy the files locally (exclude configuration.php/cache/tmp/logs)
-        $this->rsync($host, $user, $remote_path, $target, $ssh_port, $writables);
+        $this->migrateFiles($host, $user, $remote_path, $target, $ssh_port, $writables);
 
         // Set aside the writable directories (images, ..) and add to .gitignore
         $ignores = $this->taskWriteToFile($repository.'/.gitignore');
@@ -170,7 +170,7 @@ class RoboFile extends \Robo\Tasks
         $this->say('Done!');
     }
 
-    public function rsync($host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'))
+    public function migrateFiles($host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'))
     {
         if (empty($target))
         {
