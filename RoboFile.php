@@ -129,7 +129,7 @@ class RoboFile extends \Robo\Tasks
             ->line('gem \'capistrano\', \'~> 3.3.0\', require: false, group: :development')
             ->run();
 
-        $git_repo = 'git@github.com:timble/' . $project_name . '.git';
+        $git_repo = 'git@github.com:cta-int/' . $project_name . '.git';
         $this->taskExec('bundle')
                 ->arg('install')
                 ->dir($repository)
