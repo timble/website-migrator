@@ -37,27 +37,9 @@ class RoboFile extends \Robo\Tasks
         $create->run();
 
         // Copy the files locally (exclude configuration.php/cache/tmp/logs)
-        $this->taskRsync()
-            ->fromUser($user)
-            ->fromHost($host)
-            ->fromPath($remote_path)
-            ->toPath($repository)
-            ->remoteShell("ssh -p $ssh_port")
-            ->option('copy-links')
-            ->recursive()
-            ->excludeVcs()
-            ->exclude(array('/configuration.php', '/cache', '/logs', '/tmp', '/administrator/cache/'))
-            ->checksum()
-            ->wholeFile()
-            ->progress()
-            ->humanReadable()
-            ->stats()
-            //->verbose()
-            //->dryRun()
-            ->run();
+        $this->migrateFiles($host, $user, $remote_path, $target, $ssh_port, $writables);
 
         // Set aside the writable directories (images, ..) and add to .gitignore
-        $moves   = $this->taskFileSystemStack();
         $ignores = $this->taskWriteToFile($repository.'/.gitignore');
 
         if (!file_exists($repository.'/.gitignore'))
@@ -83,11 +65,8 @@ class RoboFile extends \Robo\Tasks
 
                 continue;
             }
-
-            $moves->rename($from, $to);
         }
 
-        $moves->run();
         $ignores->run();
 
         // Init git repo and commit the files
@@ -189,5 +168,102 @@ class RoboFile extends \Robo\Tasks
             ->run();
 
         $this->say('Done!');
+    }
+
+    public function migrateFiles($host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'))
+    {
+        if (empty($target))
+        {
+            $this->say('Error: Target is empty');
+            return;
+        }
+
+        $this->stopOnFail(true);
+
+        if (substr($remote_path, -1) != '/') {
+           $remote_path .= '/';
+        }
+
+        if (!file_exists($target))
+        {
+            $this->taskFileSystemStack()
+                    ->mkdir($target)
+                    ->run();
+        }
+
+        $repository = rtrim($target, '/') . '/repository';
+        $shared     = rtrim($target, '/') . '/shared';
+
+        $create = $this->taskFileSystemStack();
+
+        foreach (array($repository, $shared) as $dir)
+        {
+            if (!file_exists($dir)) {
+               $create->mkdir($dir);
+            }
+        }
+
+        $create->run();
+
+        // Copy the files locally (exclude configuration.php/cache/tmp/logs) to repository directory
+        $exclude = array('/configuration.php', '/cache', '/logs', '/tmp', '/administrator/cache/');
+
+        // Exclude writables directory
+        foreach ($writables as $writable) {
+            $exclude[] = '/'.$writable;
+        }
+
+        $this->say("Copying files to repository directory");
+
+        $this->taskRsync()
+            ->fromUser($user)
+            ->fromHost($host)
+            ->fromPath($remote_path)
+            ->toPath($repository)
+            ->remoteShell("ssh -p $ssh_port")
+            ->option('copy-links')
+            ->recursive()
+            ->excludeVcs()
+            ->exclude($exclude)
+            ->checksum()
+            ->wholeFile()
+            ->progress()
+            ->humanReadable()
+            ->stats()
+            // ->verbose()
+            // ->dryRun()
+            ->run();
+
+        // Copy writables directory to shared directory
+        $exclude = array('*');
+        $include = array('*/');
+
+        // Include writables
+        foreach ($writables as $writable) {
+            $include[] = '/'.$writable.'/**';
+        }
+
+        $this->say("Copying files to shared directory");
+
+        $this->taskRsync()
+            ->fromUser($user)
+            ->fromHost($host)
+            ->fromPath($remote_path)
+            ->toPath($shared)
+            ->remoteShell("ssh -p $ssh_port")
+            ->option('copy-links')
+            ->recursive()
+            ->includeFilter($include)
+            ->excludeVcs()
+            ->exclude($exclude)
+            ->option('prune-empty-dirs')
+            ->checksum()
+            ->wholeFile()
+            ->progress()
+            ->humanReadable()
+            ->stats()
+            // ->verbose()
+            // ->dryRun()
+            ->run();
     }
 }
