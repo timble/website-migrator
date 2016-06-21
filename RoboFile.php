@@ -75,7 +75,7 @@ class RoboFile extends \Robo\Tasks
             ->exec('init')
             ->exec('remote add origin git@github.com:cta-int/' . $project_name . '.git')
             ->add('-A')
-            ->commit('Initial commit')
+            ->commit('#1 - Initial commit')
             ->run();
 
         // Fetch database
@@ -146,6 +146,11 @@ class RoboFile extends \Robo\Tasks
 
         $linked_dirs = array_unique(array_merge($writables, array('tmp', 'logs', 'cache', 'administrator/cache')));
 
+        $this->taskReplaceInFile($repository.'/README.md')
+            ->from(array('{{title}}'))
+            ->to(array($project_name))
+            ->run();
+
         $this->taskReplaceInFile($repository.'/config/deploy.rb')
             ->from(array('{{application}}', '{{repository}}', '{{linked_dirs}}', '{{linked_files}}'))
             ->to(array($project_name, $git_repo, implode(' ', $linked_dirs), 'configuration.php'))
@@ -164,7 +169,7 @@ class RoboFile extends \Robo\Tasks
         $this->taskGitStack()
             ->dir($repository)
             ->add('-A')
-            ->commit('Setup Capistrano')
+            ->commit('#1 - Setup Capistrano')
             ->run();
 
         $this->say('Done!');
