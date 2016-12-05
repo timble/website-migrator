@@ -22,13 +22,13 @@ The following command will execute these steps:
 The command needs the following arguments:
 
 ```
-vendor/bin/robo migrate <project name> <ssh host> <ssh user> <remote path to documentroot> <local target directory> <ssh port> <list of writable directories>
+vendor/bin/robo migrate <project name> <ssh host> <ssh user> <remote path to documentroot> <local target directory> <ssh port> <list of writable directories> <github vendor>
 ```
 
 Example, if you run the following command: 
 
 ```
-vendor/bin/robo migrate www.site.com ssh.site.com username /var/www/www.site.com /Users/johndoe/Sites/www.site.com 22 images joomlatools-files
+vendor/bin/robo migrate www.site.com ssh.site.com username /var/www/www.site.com /Users/johndoe/Sites/www.site.com 22 images joomlatools-files timble
 ```
 
 the `/Users/johndoe/Sites/www.site.com` directory will contain following files:

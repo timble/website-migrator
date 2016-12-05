@@ -1,7 +1,7 @@
 <?php
 class RoboFile extends \Robo\Tasks
 {
-    public function migrate($project_name, $host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'))
+    public function migrate($project_name, $host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'), $vendor = 'timble')
     {
         $project_name = preg_replace('/[^a-zA-Z0-9\.\-\_]+/', '', $project_name);
 
@@ -73,7 +73,7 @@ class RoboFile extends \Robo\Tasks
         $this->taskGitStack()
             ->dir($repository)
             ->exec('init')
-            ->exec('remote add origin git@github.com:cta-int/' . $project_name . '.git')
+            ->exec('remote add origin git@github.com:'.$vendor.'/' . $project_name . '.git')
             ->add('-A')
             ->commit('#1 - Initial commit')
             ->run();
@@ -129,7 +129,7 @@ class RoboFile extends \Robo\Tasks
             ->line('gem \'capistrano\', \'~> 3.3.0\', require: false, group: :development')
             ->run();
 
-        $git_repo = 'git@github.com:cta-int/' . $project_name . '.git';
+        $git_repo = 'git@github.com:'.$vendor.'/' . $project_name . '.git';
         $this->taskExec('bundle')
                 ->arg('install')
                 ->dir($repository)
