@@ -1,7 +1,7 @@
 <?php
 class RoboFile extends \Robo\Tasks
 {
-    public function migrate($project_name, $host, $user, $remote_path, $target = '', $ssh_port = 22, array $writables = array('images'), $vendor = 'timble')
+    public function migrate($project_name, $host, $user, $remote_path, $target = '', $ssh_port = 22, $vendor = 'timble', array $writables = array('images'))
     {
         $project_name = preg_replace('/[^a-zA-Z0-9\.\-\_]+/', '', $project_name);
 
@@ -211,7 +211,7 @@ class RoboFile extends \Robo\Tasks
         $create->run();
 
         // Copy the files locally (exclude configuration.php/cache/tmp/logs) to repository directory
-        $exclude = array('/configuration.php', '/cache', '/logs', '/tmp', '/administrator/cache/');
+        $exclude = array('/configuration.php', '/cache', '/logs', '/tmp', '/administrator/cache/', '/administrator/components/com_akeeba/backup/', '/images/cache/', '/media/com_acymailing/logs/');
 
         // Exclude writables directory
         foreach ($writables as $writable) {
